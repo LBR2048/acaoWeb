@@ -1,0 +1,213 @@
+﻿/**
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+html, body {
+  font-family: 'Roboto', 'Helvetica', sans-serif;
+}
+.demo-avatar {
+  width: 48px;
+  height: 48px;
+}
+.logo {
+    max-width: 300px;
+    max-height: 150px;
+    margin: 10px auto 10px auto;
+}
+.demo-layout .mdl-layout__header .mdl-layout__drawer-background-color {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.mdl-layout__drawer {
+		-webkit-transform: inherit;
+		transform: inherit;
+	}
+
+.mdl-layout__drawer .avatar {
+  margin-bottom: 16px;
+}
+
+.mdl-layout__drawer .mdl-navigation{
+	padding-top: 0px !important;
+}
+
+.demo-drawer {
+  border: none;
+  width: 340px;
+}
+/* iOS Safari specific workaround */
+.demo-drawer .mdl-menu__container {
+  z-index: -1;
+}
+.demo-drawer .demo-navigation {
+  z-index: -2;
+}
+/* END iOS Safari specific workaround */
+.demo-drawer .mdl-menu .mdl-menu__item {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+.demo-drawer-header {
+  box-sizing: border-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-justify-content: flex-end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  padding: 16px;
+  height: 75px;
+}
+.demo-avatar-dropdown {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+  -webkit-flex-direction: row;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  width: 100%;
+}
+
+.demo-navigation {
+  -webkit-flex-grow: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+}
+.demo-layout .demo-navigation .mdl-navigation__link {
+  display: -webkit-flex !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  -webkit-flex-direction: row;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  color: rgb(0, 0, 0);
+  font-weight: 500;
+  border-bottom: 1px #d4d4d4 solid;
+}
+.demo-layout .demo-navigation .mdl-navigation__link:hover {
+  background-color: #295F97;
+  color: white;
+}
+
+.demo-active{
+  background-color: #295F97;
+  color: white !important;
+  border-bottom: 1px rgb(63, 81, 181) solid;
+}
+
+.demo-navigation .mdl-navigation__link .material-icons {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.56);
+  margin-right: 32px;
+}
+
+.demo-content {
+  max-width: 1080px;
+}
+
+.mdl-layout--fixed-drawer>.mdl-layout__content {
+    margin-left: 340px;
+}
+
+.demo-footer{
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 3px;
+  background-color: white;
+  text-align: center;
+	margin-left: 340px;
+}
+
+
+.textMsg{
+	padding-right:100px;
+}
+
+.timeMsg{
+	position: absolute;
+    bottom: 5px;
+    right: 10px;
+    font-size: 10px;
+    color: #555555;
+}
+
+
+/* CSS talk bubble */
+.talk-bubble {
+	margin: 30px;
+	display: inline-block;
+	position: relative;
+	height: auto;
+	background-color: white;
+	margin-top: 0px;
+    margin-bottom: 10px;
+	float: right;
+}
+
+.talk-bubble.tri-right.left-top{
+	background-color: #C5CAE9;
+	float: left;
+}
+
+.talktext{
+	margin: 10px;
+}
+
+
+.tri-right.left-top:after{
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	left: -20px;
+	right: auto;
+	top: 0px;
+	bottom: auto;
+	border: 22px solid;
+	border-color: #C5CAE9 transparent transparent transparent;
+}
+
+.tri-left.left-top:after{
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	right: -20px;
+	left: auto;
+	top: 0px;
+	bottom: auto;
+	border: 22px solid;
+	border-color: white transparent transparent transparent;
+}
+
+.img{
+    max-width:250px;
+    max-height:250px;
+}

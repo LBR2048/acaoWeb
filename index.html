@@ -1,0 +1,92 @@
+﻿<html lang="pt-br">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="mdl/material.min.css">
+	<script src="mdl/material.min.js"></script>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<script src="js/firebase.js"></script>
+	<script src="js/jquery.min.js"></script>
+	<script src="js/notify.min.js"></script>
+	<script src="js/firehelper.js"></script>
+	<title>Ação</title>
+
+	<style>
+		.mdl-layout {
+			align-items: center;
+			justify-content: center;
+		}
+		.mdl-layout__content {
+			padding: 24px;
+			flex: none;
+		}
+	</style>
+
+	<script>
+
+        firehelper = new FirebaseAcaoHelper();
+        firehelper.firebaseConfig();
+        firehelper.acaoAuthentication(initializeWebApp);
+
+        //Função chamada ao clicar no botão de login
+        function login() {
+
+            var txtEmail = document.getElementById('txtEmail');
+            var txtPassword = document.getElementById('txtUserpass');
+
+            if (txtEmail.checkValidity() && txtPassword.checkValidity()) {
+                var promise = firehelper.login(txtEmail.value, txtPassword.value);
+                promise.catch(e => $.notify("Login ou senha incorretas", { position:"top center" }));
+            }
+        }
+
+        //Função que inicializa a página de login
+        function initializeWebApp() {
+            if (firehelper.firebaseUserExists) {
+                if (window.location.href.indexOf("index") != -1) {
+                    window.location.pathname = location.pathname.substring(0,location.pathname.lastIndexOf("/") + 1) + 'chat.html';
+                }
+            } else {
+                if(window.location.href.indexOf("chat") != -1) {
+                    window.location.pathname = location.pathname.substring(0,location.pathname.lastIndexOf("/") + 1) + 'index.html';
+                }
+            }
+        }
+
+        $(window).load(function() {
+            $('input[data-required=true]').attr('required', true);
+        });
+
+	</script>
+
+</head>
+
+<body>
+<div class="mdl-layout mdl-js-layout mdl-color--grey-100">
+	<main class="mdl-layout__content">
+		<div class="mdl-card mdl-shadow--6dp">
+			<div class="mdl-card__title mdl-color--primary mdl-color-text--white" style="background-color:transparent !important;    padding-bottom: 0px;">
+				<img src="images/acao_1.png" style="width:250px;margin: 0 auto;">
+			</div>
+			<div class="mdl-card__supporting-text">
+				<form id="formLogin" action="#">
+					<ul class="errorMessages"></ul>
+					<div class="mdl-textfield mdl-js-textfield">
+						<input class="mdl-textfield__input" type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-required="true" id="txtEmail" />
+						<label class="mdl-textfield__label" for="txtEmail">E-mail</label>
+					</div>
+					<div class="mdl-textfield mdl-js-textfield">
+						<input class="mdl-textfield__input" type="password" pattern=".{6,}" data-required="true" title="Mínimo de 6 caracteres exigidos" id="txtUserpass" />
+						<label class="mdl-textfield__label" for="txtUserpass">Senha</label>
+					</div>
+				</form>
+			</div>
+			<div class="mdl-card__actions mdl-card--border">
+				<button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" style="float: right;" type="submit" form="formLogin" onclick="login()" >Log in</button>
+			</div>
+		</div>
+	</main>
+</div>
+</body>
+
+</html>

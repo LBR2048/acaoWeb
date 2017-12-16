@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Chat">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <title>Ação - Chat</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="mdl/material.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/firebase.js"></script>
+  <script src="js/firehelper.js"></script>
+  <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <script src="js/jquery.min.js"></script>
+
+  <style>
+  #view-source {
+    position: fixed;
+    display: block;
+    right: 0;
+    bottom: 0;
+    margin-right: 40px;
+    margin-bottom: 40px;
+    z-index: 900;
+  }
+  </style>
+  <script>
+
+  firehelper = new FirebaseAcaoHelper();
+  firehelper.firebaseConfig();
+  firehelper.acaoAuthentication(initializeWebApp);
+
+  //Função que inicializa a página de chat
+  function initializeWebApp() {
+    if (firehelper.firebaseUserExists){
+
+      if(window.location.href.indexOf("index") != -1) {
+        window.location.pathname = location.pathname.substring(0,location.pathname.lastIndexOf("/") + 1) + 'chat.html';
+      }
+
+      var imgUser = "acao_avatar.png";
+      console.log(firehelper.email.indexOf('contabil'));
+      var emailUser = firehelper.email.substring(0, firehelper.email.indexOf("@"));
+      console.log(emailUser);
+      if(emailUser.indexOf('contabil') != -1)
+      imgUser = "ic_contabil.png";
+      else if(emailUser.indexOf('fiscal') != -1)
+      imgUser = "ic_fiscal.png";
+      else if(emailUser.indexOf('pessoal') != -1)
+      imgUser = "ic_pessoal.png";
+      else if(emailUser.indexOf('societario') != -1)
+      imgUser = "ic_societario.png";
+
+      $('#avatarUs').attr("src","images/"+imgUser);
+      $('#userEmail').text(firehelper.email);
+      $('.demo-navigation').children().remove();
+
+      firehelper.subscribeForUserChatsUpdates(addChatItem);
+      $(".demo-footer").hide();
+      verifyNotify();
+
+    } else {
+      if (window.location.href.indexOf("chat") != -1) {
+        window.location.pathname = location.pathname.substring(0,location.pathname.lastIndexOf("/") + 1) + 'index.html';
+      }
+    }
+  }
+
+  /**
+  * Adds a new chat item to the navigation drawer
+  * @param objChat chat object
+  */
+  function addChatItem(objChat) {
+
+    let chatName = objChat.val().name;
+    let chatContactCompany = objChat.val().contactCompany;
+    let chatUnreadMessageCount = objChat.val().unreadMessageCount;
+
+    let spanName = '<span>' + chatName + ' (' + chatContactCompany + ') </span>';
+    if (chatUnreadMessageCount > 0)
+    spanName = '<span class="mdl-badge" data-badge="'+ chatUnreadMessageCount +'">' + chatName + '</span>';
+    $('.demo-navigation').append('<a class="mdl-navigation__link" data-priority="1" id="'+ objChat.key +'" href="#"> ' + spanName + ' </a>');
+
+    // Add in click event listener to chat items
+    let clickedChats = $("#"+objChat.key);
+    clickedChats.on('click', function(event) {
+      $(".demo-footer").show();
+
+      $('.demo-navigation').children().each(function(){this.classList.remove('demo-active');});
+
+      // Get clicked chat
+      let clickedChat = clickedChats[0];
+
+      // Make the clicked chat active
+      clickedChat.classList.add('demo-active');
+
+      // ??
+      $(".demo-list-item").children().remove();
+
+      // Open messages from clicked chat
+      firehelper.openChat(clickedChat.id, displayChatMessage);
+
+      // Remove badge
+      clickedChat.children[0].className = ''
+    });
+
+    // TODO pq as notificações continuam funcionando mesmo sem essa linha?
+    // Funcionam, mas só depois que o chat é clicado. Como então os badges são atualizados?
+    firehelper.openListenToNotify(objChat,notifyMsg);
+
+    $("#divloading").hide();
+    $(".demo-layout").show();
+  }
+
+  function updateBadge(objChat) {
+    if (objChat.val().unreadMessageCount > 0){
+      let $objChat = $('#' + objChat.key);
+
+      // Update chat badge with the current number of unread messages
+      $objChat.children()[0].className = 'mdl-badge';
+      $objChat.children()[0].setAttribute('data-badge', objChat.val().unreadMessageCount);
+
+      // Move chat to the beginning of the list
+      $objChat.prependTo('.demo-navigation');
+    }
+  }
+
+  //Função que cria as mensagens pro chat
+  function displayChatMessage(userChatId, ObjMsg) {
+    if (userChatId == firehelper.currentChatId) {
+      let messageDate = new Date(parseInt(ObjMsg.timestamp));
+      let messageTime = messageDate.getHours() + ":" + (messageDate.getMinutes()<10?'0':'') + messageDate.getMinutes();
+
+      if (typeof ObjMsg.photoURL === "undefined") {
+
+        // Text message
+        console.log('mensagem de texto');
+        if (ObjMsg.senderId == firehelper.uid) {
+          $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-left left-top"><div class="talktext"><p class="textMsg">'+ObjMsg.text+'</p><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " + messageTime+'</div></div></div></div><br>');
+        } else {
+          $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-right left-top"><div class="talktext"><p class="textMsg">'+ObjMsg.text+'</p><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " +messageTime+'</div></div></div></div><br>');
+        }
+
+      } else {
+
+        if (ObjMsg.senderId == firehelper.uid) {
+          $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-left left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " + messageTime+'</div></div></div></div><br>');
+
+          // console.log(firehelper.getImageUrl(ObjMsg.photoURL));
+          // firehelper.getImageUrl(ObjMsg.photoURL);
+
+          firehelper.setImageUrl(ObjMsg.photoURL, document.getElementById(ObjMsg.timestamp));
+
+
+        } else {
+          $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-right left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " +messageTime+'</div></div></div></div><br>');
+
+          // console.log(firehelper.getImageUrl(ObjMsg.photoURL));
+          // firehelper.getImageUrl(ObjMsg.photoURL);
+
+          firehelper.setImageUrl(ObjMsg.photoURL, document.getElementById(ObjMsg.timestamp));
+
+        }
+
+        // firehelper.setImageUrl("gs://path", )
+
+      }
+
+      $('.mdl-layout__content').scrollTop($('.mdl-layout__content')[0].scrollHeight);
+    }
+  }
+
+  $(window).load(function() {
+
+    //Evento click do botão de envio de mensagens
+    $("#sendMessage").on('click', function() {
+      firehelper.sendMessage($("#txtMessage").val());
+      $("#txtMessage").val("");
+    });
+
+    //Evento click do botão de Sair
+    $("#signOut").on('click', function() {
+      firehelper.signOut();
+
+    });
+
+  });
+
+  //Verifica se a notificação já foi aceita
+  function verifyNotify() {
+
+    if (!("Notification" in window)) {
+      //alert("This browser does not support desktop notification");
+    }
+
+    // Otherwise, we need to ask the user for permission
+    else if (Notification.permission !== 'denied') {
+      Notification.requestPermission(function (permission) {
+        // If the user accepts, let's create a notification
+      });
+    }
+  }
+
+  function notifyMsg(chatId, ObjMsg) {
+
+    if(ObjMsg.senderId != firehelper.uid && ObjMsg.isRead != true) {
+      if (Notification.permission === 'granted') {
+
+        var options = {
+          body: ObjMsg.text,
+          icon: 'images/acao_avatar_2.png',
+          sound: 'sounds/jubilation.mp3'
+        };
+
+        var n = new Notification('Nova mensagem de ' + ObjMsg.senderEmail, options);
+
+        n.onclick = function() {
+          window.focus();
+          $("#"+chatId).trigger("click");
+          this.close();
+        };
+      }
+    }
+  }
+
+  </script>
+
+</head>
+
+<body style="overflow: hidden;">
+
+  <!-- MDL Spinner Component with Single Color -->
+  <div id="divloading" style="width:100%;height:100%;background-color:white;top: 50%;position: absolute;"><div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active" style="margin: 0 auto;display: block;"></div></div>
+
+  <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-drawer" style='display: true;'>
+
+    <div class="demo-drawer mdl-layout__drawer" style="background-color: #295f97; color: white !important;">
+      <!--Acao logo-->
+      <div class="demo-avatar-dropdown">
+        <img src="images/acao_5.png" class="logo" id="logo">
+      </div>
+
+      <header class="demo-drawer-header">
+        <!--span id="userLogged">NOME USUARIO</span-->
+        <div class="demo-avatar-dropdown">
+          <img src="images/ic_contabil.png" style="margin-right:15px" class="demo-avatar" id="avatarUs">
+          <span id="userEmail">hello@example.com</span>
+          <div class="mdl-layout-spacer"></div>
+          <button id="accbtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+            <i class="material-icons" role="presentation">arrow_drop_down</i>
+            <span class="visuallyhidden">Accounts</span>
+          </button>
+          <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="accbtn">
+            <li class="mdl-menu__item" id='signOut'>Sair</li>
+          </ul>
+        </div>
+      </header>
+
+      <nav class="demo-navigation mdl-navigation" style="background-color:#e6e6e6">
+        <!--a class="mdl-navigation__link"  href=""> <span class="mdl-badge" data-badge="4">Usuario1</span> </a-->
+      </nav>
+    </div>
+
+    <main class="mdl-layout__content mdl-color--grey-100">
+      <div class="demo-list-item mdl-list"></div>
+      <!-- Simple Textfield -->
+    </main>
+
+    <footer>
+      <form action="#" class="demo-footer">
+        <div class="mdl-textfield mdl-js-textfield" style="width:90%">
+          <input class="mdl-textfield__input" type="text" id="txtMessage">
+          <label class="mdl-textfield__label" for="txtMessage">Text...</label>
+
+        </div>
+        <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" id="sendMessage">
+          <i class="material-icons" >send</i>
+        </button>
+      </form>
+    </footer>
+  </div>
+</body>
+</html>
