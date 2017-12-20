@@ -134,8 +134,8 @@
     if (userChatId == firehelper.currentChatId) {
       let messageDate = new Date(parseInt(ObjMsg.timestamp));
       let messageTime = messageDate.getHours() + ":" + (messageDate.getMinutes()<10?'0':'') + messageDate.getMinutes();
-
-      if (typeof ObjMsg.photoURL === "undefined") {
+        console.log(ObjMsg);
+      if (typeof ObjMsg.text !== "undefined") {
 
         // Text message
         console.log('mensagem de texto');
@@ -145,7 +145,8 @@
           $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-right left-top"><div class="talktext"><p class="textMsg">'+ObjMsg.text+'</p><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " +messageTime+'</div></div></div></div><br>');
         }
 
-      } else {
+      } else if (typeof ObjMsg.photoURL !== "undefined") {
+          console.log('mensagem de imagemß');
 
         if (ObjMsg.senderId == firehelper.uid) {
           $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-left left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " + messageTime+'</div></div></div></div><br>');
@@ -168,7 +169,28 @@
 
         // firehelper.setImageUrl("gs://path", )
 
+      } else if (typeof ObjMsg.PDF !== "undefined") {
+          console.log('mensagem de pdf');
+
+          if (ObjMsg.senderId == firehelper.uid) {
+              $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-left left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " + messageTime+'</div></div></div></div><br>');
+
+              // console.log(firehelper.getImageUrl(ObjMsg.photoURL));
+              // firehelper.getImageUrl(ObjMsg.photoURL);
+
+              firehelper.setPDFUrl(ObjMsg.PDF, document.getElementById(ObjMsg.timestamp));
+
+
+          } else {
+              $(".demo-list-item").append('<div style="width:100%;display: inline-block;"><div class="talk-bubble tri-right left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " +messageTime+'</div></div></div></div><br>');
+
+              // console.log(firehelper.getImageUrl(ObjMsg.photoURL));
+              // firehelper.getImageUrl(ObjMsg.photoURL);
+
+              firehelper.setPDFUrl(ObjMsg.PDF, document.getElementById(ObjMsg.timestamp));
+          }
       }
+
 
       $('.mdl-layout__content').scrollTop($('.mdl-layout__content')[0].scrollHeight);
     }
