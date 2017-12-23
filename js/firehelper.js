@@ -116,8 +116,10 @@ function FirebaseAcaoHelper(){
         // If the image is a Cloud Storage URI we fetch the URL.
         if (pdfUrl.startsWith('documents/')) {
             // imgElement.src = FriendlyChat.LOADING_IMAGE_URL; // Display a loading image first.
-            storage.refFromURL(pdfUrl).getDownloadURL().then(function(url) {
-                pdfElement.src = url;
+            storage.ref(pdfUrl).getDownloadURL().then(function(url) {
+                console.log(url)
+                pdfElement.src = "images/document.png";
+                pdfElement.href = url;
             });
         } else {
             // imgElement.src = imageUri;
