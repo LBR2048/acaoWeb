@@ -119,7 +119,7 @@ function FirebaseAcaoHelper(){
             storage.ref(pdfUrl).getDownloadURL().then(function(url) {
                 console.log(url)
                 pdfElement.src = "images/document.png";
-                pdfElement.href = url;
+                $(pdfElement) .closest("a").attr("href", url);
             });
         } else {
             // imgElement.src = imageUri;
@@ -231,14 +231,35 @@ function FirebaseAcaoHelper(){
         acaoRef.child('chat-messages').child(currentChatId).off();
 
         acaoRef.child('chat-messages').child(currentChatId).on('child_added', message => {
-            message.val().key = message.key;
-            functionAfter(currentChatId, message.val());
+            //if (message.val().PDF !== "NOTSET" || message.val().photoURL == "NOTSET" || message.val().text !== null) {
+                console.log(message.key);
 
-            //Define que j� foi lida a mensagem
-            this.setMessageRead(currentChatId, message.key);
+                message.val().key = message.key;
 
-            //Notifica quando chega mensagem nova
-            notifyMsg(currentChatId, message.val());
+                functionAfter(currentChatId, message.val());
+
+
+                //Define que j� foi lida a mensagem
+                this.setMessageRead(currentChatId, message.key);
+
+                //Notifica quando chega mensagem nova
+                notifyMsg(currentChatId, message.val());
+            //}
+        });
+
+        acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
+            if (message.val().PDF !== "NOTSET" || message.val().photoURL !== "NOTSET" || message.val().text !== null) {
+                message.val().key = message.key;
+
+                functionAfter(currentChatId, message.val());
+
+
+                //Define que j� foi lida a mensagem
+                //this.setMessageRead(currentChatId, message.key);
+
+                //Notifica quando chega mensagem nova
+                //notifyMsg(currentChatId, message.val());
+            }
         });
         //
         // acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
@@ -286,14 +307,15 @@ function FirebaseAcaoHelper(){
         var thisReference = this;
 
         acaoRef.child("notification_message").once('value', notification => {
-            acaoRef.child("users").child(userId).child("fcm_token").once('value', token => {
-                if (token.val() != null) {
-                    this.ajaxFireBaseRequest(notification, token.val(), thisReference, userId);
-                }
-            });
+            if (notification.title != null) {
+                acaoRef.child("users").child(userId).child("fcm_token").once('value', token => {
+                    if(token.val() != null) {
+                        this.ajaxFireBaseRequest(notification, token.val(), thisReference, userId);
+                    }
+                });
+            }
         });
     };
-
     this.ajaxFireBaseRequest = function(notification, fcmToken, thisReference, userId) {
         $.ajax({
             type: 'POST',
