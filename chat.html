@@ -172,7 +172,7 @@
       } else if (typeof ObjMsg.PDF !== "undefined" && ObjMsg.PDF !== "NOTSET") {
           if (ObjMsg.senderId == firehelper.uid) {
 
-              $(".demo-list-item").append('<a href="#"><div style="width:100%;display: inline-block;"><div class="talk-bubble tri-left left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" href="asdfsdf" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " + messageTime+'</div></div></div></div></a><br>');
+              $(".demo-list-item").append('<a href="#" target="_blank"><div style="width:100%;display: inline-block;"><div class="talk-bubble tri-left left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" href="asdfsdf" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " + messageTime+'</div></div></div></div></a><br>');
 
               // console.log(firehelper.getImageUrl(ObjMsg.photoURL));
               // firehelper.getImageUrl(ObjMsg.photoURL);
@@ -181,7 +181,7 @@
 
 
           } else {
-              $(".demo-list-item").append('<a href=""><div style="width:100%;display: inline-block;"><div class="talk-bubble tri-right left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" href="asfasf" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " +messageTime+'</div></div></div></div></a><br>');
+              $(".demo-list-item").append('<a href="" target="_blank"><div style="width:100%;display: inline-block;"><div class="talk-bubble tri-right left-top"><div class="talktext"><img id="' + ObjMsg.timestamp + '" src="images/acao_avatar_2.png" href="asfasf" class="img"><div class="timeMsg">'+messageDate.toLocaleDateString("pt-br") + " " +messageTime+'</div></div></div></div></a><br>');
 
               // console.log(firehelper.getImageUrl(ObjMsg.photoURL));
               // firehelper.getImageUrl(ObjMsg.photoURL);
@@ -195,12 +195,21 @@
     }
   }
 
+
   $(window).load(function() {
 
     //Evento click do botão de envio de mensagens
     $("#sendMessage").on('click', function() {
       firehelper.sendMessage($("#txtMessage").val());
       $("#txtMessage").val("");
+    });
+
+    $("#archiveSelector").on('change', function(){
+        console.log("selected a file");
+    });
+
+    $("#archiveSelector").click(function () {
+        $("#inputFileUpload").click();
     });
 
     //Evento click do botão de Sair
@@ -246,6 +255,11 @@
         };
       }
     }
+  }
+
+  function fileSelected(file) {
+      // TODO: save as message and send to firebase!!
+      console.log(file);
   }
 
   </script>
@@ -301,6 +315,10 @@
         <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" id="sendMessage">
           <i class="material-icons" >send</i>
         </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" id="archiveSelector">
+          <i class="material-icons">attach_file</i>
+        </button>
+        <input type="file" onchange='fileSelected(this.files[0])' accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, application/excel, application/pdf,application/vnd.ms-excel" id="inputFileUpload" style="visibility: hidden;"/>
       </form>
     </footer>
   </div>
