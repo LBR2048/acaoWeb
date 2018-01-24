@@ -30,6 +30,11 @@ function FirebaseAcaoHelper(){
         // Create a reference with an initial file path and name
         storage = firebase.storage();
         storageRef = storage.ref();
+        documentsRef = function(fileName) {
+            documentsRef = storageRef.child('documents/' + fileName);
+            return documentsRef;
+        };
+
         pathReference = storage.ref('images/space.jpg');
 
         // Create a reference from a Google Cloud Storage URI
@@ -268,6 +273,52 @@ function FirebaseAcaoHelper(){
         // });
     };
 
+
+    /**
+     * Sends new pdf file message
+     * @param file
+     */
+    this.sendPDFMessage = function(file) {
+
+        // Create empty message at chats/$currentChatId/messages and get its key so we can further reference it
+        var newMessageKey = acaoRef.child('chat-messages').child(this.currentChatId).push().key;
+
+        // Create new message with key received from Firebase
+        var newMessage = {
+            PDF: 'NOTSET',
+            senderId: this.uid,
+            senderEmail: this.email,
+            timestamp: Date.now()
+        };
+
+        this.updateLatestMessageTimestamp(this.uid);
+        var sendedMessageUserId = null;
+        acaoRef.child('user-chats-properties').child(this.uid).child(this.currentChatId).child('contactId').once('value', contactId => {
+            this.updateLatestMessageTimestamp(contactId.val());
+            this.incrementUnreadMessageCount(contactId.val());
+            sendedMessageUserId = contactId.val();
+        });
+
+        // Add newly created message to Firebase chats/$currentChatId/messages/$messageId
+        acaoRef.child('chat-messages').child(this.currentChatId).child(newMessageKey).set(newMessage);
+
+        console.log(sendedMessageUserId);
+        this.sendPushNotification(sendedMessageUserId);
+
+        this.uploadFileInStorage(file, newMessageKey, sendedMessageUserId);
+    };
+
+    this.uploadFileInStorage = function(file, messageId) {
+
+        currentChatId = this.currentChatId;
+        console.log(currentChatId +'/'+file.name);
+
+        var acaoRef
+        documentsRef(currentChatId +'/'+file.name).put(file).then(function(snapshot) {
+            acaoRef.child('chat-messages').child(currentChatId).child(messageId).child('PDF').set('documents/'+currentChatId+'/'+file.name);
+        });
+    };
+
     /**
      * Sends new message from the current user to the current chat
      * @param messageText text for the message
@@ -307,7 +358,7 @@ function FirebaseAcaoHelper(){
         var thisReference = this;
 
         acaoRef.child("notification_message").once('value', notification => {
-            if (notification.title != null) {
+            if (notification.val().title != null) {
                 acaoRef.child("users").child(userId).child("fcm_token").once('value', token => {
                     if(token.val() != null) {
                         this.ajaxFireBaseRequest(notification, token.val(), thisReference, userId);
@@ -316,6 +367,7 @@ function FirebaseAcaoHelper(){
             }
         });
     };
+
     this.ajaxFireBaseRequest = function(notification, fcmToken, thisReference, userId) {
         $.ajax({
             type: 'POST',
@@ -337,9 +389,11 @@ function FirebaseAcaoHelper(){
                 "priority": "high"
             }),
             success: function () {
+                console.log("push sended")
                 thisReference.insertFIRNotification(userId);
             },
             error: function (xhr) {
+                console.log("push not sended")
                 console.log(xhr.error);
             }
         });
