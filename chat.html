@@ -201,6 +201,7 @@
     //Evento click do botão de envio de mensagens
     $("#sendMessage").on('click', function() {
       firehelper.sendMessage($("#txtMessage").val());
+      console.log("passing here");
       $("#txtMessage").val("");
     });
 

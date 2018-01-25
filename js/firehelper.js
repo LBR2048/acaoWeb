@@ -30,10 +30,7 @@ function FirebaseAcaoHelper(){
         // Create a reference with an initial file path and name
         storage = firebase.storage();
         storageRef = storage.ref();
-        documentsRef = function(fileName) {
-            documentsRef = storageRef.child('documents/' + fileName);
-            return documentsRef;
-        };
+
 
         pathReference = storage.ref('images/space.jpg');
 
@@ -45,6 +42,10 @@ function FirebaseAcaoHelper(){
         // var httpsReference = storage.refFromURL('https://firebasestorage.googleapis.com/b/bucket/o/images%20stars.jpg');
       };
 
+    this.documentsRef = function(fileName) {
+        docsRef = storageRef.child('documents/' + fileName);
+        return docsRef;
+    };
     /**
      * Authenticate user
      * @param functionAfter
@@ -122,7 +123,6 @@ function FirebaseAcaoHelper(){
         if (pdfUrl.startsWith('documents/')) {
             // imgElement.src = FriendlyChat.LOADING_IMAGE_URL; // Display a loading image first.
             storage.ref(pdfUrl).getDownloadURL().then(function(url) {
-                console.log(url)
                 pdfElement.src = "images/document.png";
                 $(pdfElement) .closest("a").attr("href", url);
             });
@@ -236,7 +236,7 @@ function FirebaseAcaoHelper(){
         acaoRef.child('chat-messages').child(currentChatId).off();
 
         acaoRef.child('chat-messages').child(currentChatId).on('child_added', message => {
-            //if (message.val().PDF !== "NOTSET" || message.val().photoURL == "NOTSET" || message.val().text !== null) {
+            if (message.val().PDF !== "NOTSET" || message.val().photoURL == "NOTSET" || message.val().text !== null) {
                 console.log(message.key);
 
                 message.val().key = message.key;
@@ -249,13 +249,13 @@ function FirebaseAcaoHelper(){
 
                 //Notifica quando chega mensagem nova
                 notifyMsg(currentChatId, message.val());
-            //}
-        });
+            }
+        })
 
         acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
-            if (message.val().PDF !== "NOTSET" || message.val().photoURL !== "NOTSET" || message.val().text !== null) {
+            console.log(message.val().text == null);
+            if ((message.val().PDF !== "NOTSET" || message.val().photoURL !== "NOTSET") && message.val().text == null) {
                 message.val().key = message.key;
-
                 functionAfter(currentChatId, message.val());
 
 
@@ -265,7 +265,7 @@ function FirebaseAcaoHelper(){
                 //Notifica quando chega mensagem nova
                 //notifyMsg(currentChatId, message.val());
             }
-        });
+        })
         //
         // acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
         //     message.val().key = message.key;
@@ -313,9 +313,9 @@ function FirebaseAcaoHelper(){
         currentChatId = this.currentChatId;
         console.log(currentChatId +'/'+file.name);
 
-        var acaoRef
-        documentsRef(currentChatId +'/'+file.name).put(file).then(function(snapshot) {
-            acaoRef.child('chat-messages').child(currentChatId).child(messageId).child('PDF').set('documents/'+currentChatId+'/'+file.name);
+        var _acaoRef = acaoRef;
+        this.documentsRef(currentChatId +'/'+file.name).put(file).then(function(snapshot) {
+            _acaoRef.child('chat-messages').child(currentChatId).child(messageId).child('PDF').set('documents/'+currentChatId+'/'+file.name);
         });
     };
 
@@ -389,11 +389,9 @@ function FirebaseAcaoHelper(){
                 "priority": "high"
             }),
             success: function () {
-                console.log("push sended")
                 thisReference.insertFIRNotification(userId);
             },
             error: function (xhr) {
-                console.log("push not sended")
                 console.log(xhr.error);
             }
         });
