@@ -30,6 +30,8 @@ function FirebaseAcaoHelper(){
         // Create a reference with an initial file path and name
         storage = firebase.storage();
         storageRef = storage.ref();
+
+
         pathReference = storage.ref('images/space.jpg');
 
         // Create a reference from a Google Cloud Storage URI
@@ -40,6 +42,10 @@ function FirebaseAcaoHelper(){
         // var httpsReference = storage.refFromURL('https://firebasestorage.googleapis.com/b/bucket/o/images%20stars.jpg');
       };
 
+    this.documentsRef = function(fileName) {
+        docsRef = storageRef.child('documents/' + fileName);
+        return docsRef;
+    };
     /**
      * Authenticate user
      * @param functionAfter
@@ -110,6 +116,20 @@ function FirebaseAcaoHelper(){
         // imgElement.src = imageUri;
         // this.setImageUrl(imageUri, imgElement);
       }
+    };
+
+    this.setPDFUrl = function(pdfUrl, pdfElement) {
+        // If the image is a Cloud Storage URI we fetch the URL.
+        if (pdfUrl.startsWith('documents/')) {
+            // imgElement.src = FriendlyChat.LOADING_IMAGE_URL; // Display a loading image first.
+            storage.ref(pdfUrl).getDownloadURL().then(function(url) {
+                pdfElement.src = "images/document.png";
+                $(pdfElement) .closest("a").attr("href", url);
+            });
+        } else {
+            // imgElement.src = imageUri;
+            // this.setImageUrl(imageUri, imgElement);
+        }
     };
 
     this.getImageUrl = function(imageUri) {
@@ -216,20 +236,87 @@ function FirebaseAcaoHelper(){
         acaoRef.child('chat-messages').child(currentChatId).off();
 
         acaoRef.child('chat-messages').child(currentChatId).on('child_added', message => {
-            message.val().key = message.key;
-            functionAfter(currentChatId, message.val());
+            if (message.val().PDF !== "NOTSET" || message.val().photoURL == "NOTSET" || message.val().text !== null) {
+                console.log(message.key);
 
-            //Define que j� foi lida a mensagem
-            this.setMessageRead(currentChatId, message.key);
+                message.val().key = message.key;
 
-            //Notifica quando chega mensagem nova
-            notifyMsg(currentChatId, message.val());
-        });
+                functionAfter(currentChatId, message.val());
+
+
+                //Define que j� foi lida a mensagem
+                this.setMessageRead(currentChatId, message.key);
+
+                //Notifica quando chega mensagem nova
+                notifyMsg(currentChatId, message.val());
+            }
+        })
+
+        acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
+            console.log(message.val().text == null);
+            if ((message.val().PDF !== "NOTSET" || message.val().photoURL !== "NOTSET") && message.val().text == null) {
+                message.val().key = message.key;
+                functionAfter(currentChatId, message.val());
+
+
+                //Define que j� foi lida a mensagem
+                //this.setMessageRead(currentChatId, message.key);
+
+                //Notifica quando chega mensagem nova
+                //notifyMsg(currentChatId, message.val());
+            }
+        })
         //
         // acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
         //     message.val().key = message.key;
         //     functionAfter(currentChatId, message.val());
         // });
+    };
+
+
+    /**
+     * Sends new pdf file message
+     * @param file
+     */
+    this.sendPDFMessage = function(file) {
+
+        // Create empty message at chats/$currentChatId/messages and get its key so we can further reference it
+        var newMessageKey = acaoRef.child('chat-messages').child(this.currentChatId).push().key;
+
+        // Create new message with key received from Firebase
+        var newMessage = {
+            PDF: 'NOTSET',
+            senderId: this.uid,
+            senderEmail: this.email,
+            timestamp: Date.now()
+        };
+
+        this.updateLatestMessageTimestamp(this.uid);
+        var sendedMessageUserId = null;
+        acaoRef.child('user-chats-properties').child(this.uid).child(this.currentChatId).child('contactId').once('value', contactId => {
+            this.updateLatestMessageTimestamp(contactId.val());
+            this.incrementUnreadMessageCount(contactId.val());
+            sendedMessageUserId = contactId.val();
+        });
+
+        // Add newly created message to Firebase chats/$currentChatId/messages/$messageId
+        acaoRef.child('chat-messages').child(this.currentChatId).child(newMessageKey).set(newMessage);
+
+        console.log(sendedMessageUserId);
+        this.sendPushNotification(sendedMessageUserId);
+
+        this.uploadFileInStorage(file, newMessageKey, sendedMessageUserId);
+    };
+
+    this.uploadFileInStorage = function(file, messageId) {
+
+        currentChatId = this.currentChatId;
+        console.log(currentChatId +'/'+file.name);
+
+        var _acaoRef = acaoRef;
+        this.documentsRef(currentChatId +'/'+file.name).put(file).then(function(snapshot) {
+            _acaoRef.child('chat-messages').child(currentChatId).child(messageId).child('PDF').set('documents/'+currentChatId+'/'+file.name);
+        });
     };
 
     /**
@@ -271,11 +358,13 @@ function FirebaseAcaoHelper(){
         var thisReference = this;
 
         acaoRef.child("notification_message").once('value', notification => {
-            acaoRef.child("users").child(userId).child("fcm_token").once('value', token => {
-                if (token.val() != null) {
-                    this.ajaxFireBaseRequest(notification, token.val(), thisReference, userId);
-                }
-            });
+            if (notification.val().title != null) {
+                acaoRef.child("users").child(userId).child("fcm_token").once('value', token => {
+                    if(token.val() != null) {
+                        this.ajaxFireBaseRequest(notification, token.val(), thisReference, userId);
+                    }
+                });
+            }
         });
     };
 
