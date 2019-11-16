@@ -123,6 +123,7 @@ function FirebaseAcaoHelper(){
         if (pdfUrl.startsWith('documents/')) {
             // imgElement.src = FriendlyChat.LOADING_IMAGE_URL; // Display a loading image first.
             storage.ref(pdfUrl).getDownloadURL().then(function(url) {
+                console.log(pdfUrl);
                 pdfElement.src = "images/document.png";
                 $(pdfElement) .closest("a").attr("href", url);
             });
@@ -220,7 +221,7 @@ function FirebaseAcaoHelper(){
      */
     this.openListenToNotify = function(objChat, functionAfter){
         acaoRef.child('chat-messages').child(objChat.key).on('child_added', message => {
-            functionAfter(objChat.key, message.val());
+            functionAfter(objChat.key, message.val(), message.key);
         });
     };
 
@@ -241,11 +242,14 @@ function FirebaseAcaoHelper(){
 
                 message.val().key = message.key;
 
-                functionAfter(currentChatId, message.val());
+                functionAfter(currentChatId, message.val(), message.key);
 
 
-                //Define que j� foi lida a mensagem
-                this.setMessageRead(currentChatId, message.key);
+                if (message.val().senderId != this.uid) {
+                    //Define que j� foi lida a mensagem
+                    console.log(message.key);
+                    this.setMessageRead(currentChatId, message.key);
+                }
 
                 //Notifica quando chega mensagem nova
                 notifyMsg(currentChatId, message.val());
@@ -254,9 +258,12 @@ function FirebaseAcaoHelper(){
 
         acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
             console.log(message.val().text == null);
-            if ((message.val().PDF !== "NOTSET" || message.val().photoURL !== "NOTSET") && message.val().text == null) {
-                message.val().key = message.key;
-                functionAfter(currentChatId, message.val());
+
+            console.log(message.val());
+
+
+            message.val().key = message.key;
+            functionAfter(currentChatId, message.val(), message.key);
 
 
                 //Define que j� foi lida a mensagem
@@ -264,7 +271,6 @@ function FirebaseAcaoHelper(){
 
                 //Notifica quando chega mensagem nova
                 //notifyMsg(currentChatId, message.val());
-            }
         })
         //
         // acaoRef.child('chat-messages').child(currentChatId).on('child_changed', message => {
@@ -288,7 +294,8 @@ function FirebaseAcaoHelper(){
             PDF: 'NOTSET',
             senderId: this.uid,
             senderEmail: this.email,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            status: 1
         };
 
         this.updateLatestMessageTimestamp(this.uid);
@@ -333,7 +340,8 @@ function FirebaseAcaoHelper(){
             text: messageText,
             senderId: this.uid,
             senderEmail: this.email,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            status: 1
         };
 
         this.updateLatestMessageTimestamp(this.uid);
@@ -438,6 +446,6 @@ function FirebaseAcaoHelper(){
     };
 
     this.setMessageRead = function (chatId, messageId) {
-        acaoRef.child('chat-messages').child(chatId).child(messageId).child('isRead').set(true);
+        acaoRef.child('chat-messages').child(chatId).child(messageId).child('status').set(2);
     }
 }
